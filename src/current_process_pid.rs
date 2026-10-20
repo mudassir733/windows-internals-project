@@ -4,6 +4,7 @@ use windows_sys::Win32::Foundation::{CloseHandle, GetLastError};
 use windows_sys::Win32::System::ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
 use windows_sys::Win32::System::Threading::{
     GetCurrentProcessId, OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ,
+    QueryFullProcessImageNameW,
 };
 pub fn main() {
     println!("=== HERE IS MY PROGRAM WINDOWS ID CARD ===\n");
@@ -31,6 +32,24 @@ pub fn main() {
         }
 
         println!("Process handle find successfully");
+        //  empty buffer to store the path of the executable
+        let mut path_buffer: [u16; 1024] = [0; 1024];
+
+        let mut buffer_size: u32 = path_buffer.len() as u32;
+
+        // API call to get the full path of the executable associated with the process handle
+        let path_success =
+            QueryFullProcessImageNameW(handle, 0, path_buffer.as_mut_ptr(), &mut buffer_size);
+
+        if path_success != 0 {
+            // Convert the buffer to a Rust string
+            let executable_path: String =
+                String::from_utf16_lossy(&path_buffer[..buffer_size as usize]);
+            println!("Executable Path: {}", executable_path);
+        } else {
+            let error_code: u32 = GetLastError();
+            println!("Failed to get executable path. Error code: {}", error_code);
+        }
 
         // store the memory information in structure
         let mut mem_counters: PROCESS_MEMORY_COUNTERS = mem::zeroed();
