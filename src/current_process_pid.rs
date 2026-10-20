@@ -6,6 +6,7 @@ use windows_sys::Win32::System::Threading::{
     GetCurrentProcessId, OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ,
     QueryFullProcessImageNameW,
 };
+#[allow(dead_code)]
 pub fn main() {
     println!("=== HERE IS MY PROGRAM WINDOWS ID CARD ===\n");
 
