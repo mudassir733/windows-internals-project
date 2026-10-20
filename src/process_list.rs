@@ -30,7 +30,7 @@ pub fn print_all_processes() {
             "{:<10} {:<30} {:<10}",
             "PID", "Process Name", "Thread Count"
         );
-        println!("--------------------------------");
+        println!("---------------------------------------------------------");
 
         while success != 0 {
             let pid: i32 = entry.th32ProcessID as i32;
