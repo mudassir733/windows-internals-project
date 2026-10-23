@@ -5,6 +5,7 @@ use windows_sys::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, PROCESSENTRY32, Process32First, Process32Next, TH32CS_SNAPPROCESS,
 };
 
+#[allow(dead_code)]
 pub fn print_all_processes() {
     println!("\n=== LIST OF ALL SYSTEM PROCESSES ===\n");
 
