@@ -5,6 +5,8 @@ use windows_sys::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, PROCESSENTRY32, Process32First, Process32Next, TH32CS_SNAPPROCESS,
 };
 
+use crate::models::ProcessListItem;
+
 #[allow(dead_code)]
 pub fn print_all_processes() {
     println!("\n=== LIST OF ALL SYSTEM PROCESSES ===\n");
@@ -76,4 +78,37 @@ pub fn find_pid_by_name(target_name: &str) -> Option<u32> {
         CloseHandle(snapshot);
         None
     }
+}
+
+pub fn get_all_processes_list() -> Vec<ProcessListItem> {
+    // created empty Vec array
+    let mut list: Vec<ProcessListItem> = Vec::new();
+    unsafe {
+        let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if snapshot == INVALID_HANDLE_VALUE {
+            return list; // if fail return empty
+        }
+
+        let mut entry: PROCESSENTRY32 = mem::zeroed();
+        entry.dwSize = mem::size_of::<PROCESSENTRY32>() as u32;
+
+        let mut success = Process32First(snapshot, &mut entry);
+
+        while success != 0 {
+            let pid = entry.th32ProcessID;
+            let c_str = CStr::from_ptr(entry.szExeFile.as_ptr() as *const i8);
+            let process_name = c_str.to_string_lossy().to_string();
+
+            list.push(ProcessListItem {
+                pid,
+                name: process_name,
+            });
+
+            success = Process32Next(snapshot, &mut entry);
+        }
+
+        CloseHandle(snapshot);
+    }
+
+    list
 }

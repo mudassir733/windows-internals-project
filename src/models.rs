@@ -7,3 +7,9 @@ pub struct ProcessInfo {
     pub path: String,
     pub ram_usage_mb: usize,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProcessListItem {
+    pub pid: u32,
+    pub name: String,
+}
