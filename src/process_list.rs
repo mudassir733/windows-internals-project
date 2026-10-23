@@ -49,3 +49,30 @@ pub fn print_all_processes() {
         CloseHandle(snapshot);
     }
 }
+
+pub fn find_pid_by_name(target_name: &str) -> Option<u32> {
+    unsafe {
+        let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+        if snapshot == INVALID_HANDLE_VALUE {
+            return None;
+        }
+        let mut entry: PROCESSENTRY32 = mem::zeroed();
+        entry.dwSize = mem::size_of::<PROCESSENTRY32>() as u32;
+
+        let mut success = Process32First(snapshot, &mut entry);
+        while success != 0 {
+            let c_str = CStr::from_ptr(entry.szExeFile.as_ptr() as *const i8);
+            let process_name = c_str.to_string_lossy();
+
+            if process_name.eq_ignore_ascii_case(target_name) {
+                CloseHandle(snapshot);
+                return Some(entry.th32ProcessID);
+            }
+
+            success = Process32Next(snapshot, &mut entry);
+        }
+        CloseHandle(snapshot);
+        None
+    }
+}
