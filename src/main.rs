@@ -1,10 +1,15 @@
-use axum::{Json, Router, extract::Path, http::StatusCode, routing::get};
+use axum::{
+    Json, Router,
+    extract::Path,
+    http::StatusCode,
+    routing::{delete, get},
+};
 use serde_json::{Value, json};
 use tower_http::cors::CorsLayer;
 mod current_process_pid;
+mod process_action;
 mod process_details;
 mod process_list;
-
 // struct
 pub mod models;
 
@@ -18,8 +23,9 @@ async fn main() {
     let app = Router::new()
         .route("/api/processes", get(get_all_processes_handler))
         .route("/api/process/{name}", get(get_process_handler))
+        // NAYA ROUTE: HTTP DELETE method k sath
+        .route("/api/kill/{pid}", delete(kill_process_handler))
         .layer(cors);
-
     // listerner
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3001")
         .await
@@ -50,4 +56,23 @@ async fn get_process_handler(
     });
 
     Err((StatusCode::NOT_FOUND, Json(error_message)))
+}
+
+async fn kill_process_handler(
+    Path(pid): Path<u32>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let is_killed = process_action::kill_process(pid);
+
+    if is_killed {
+        Ok(Json(json!({
+            "success": true,
+            "message": format!("Process {} successfully terminated.", pid)
+        })))
+    } else {
+        let error_message = json!({
+            "success": false,
+            "error": "Failed to kill process. Access Denied ya process exist nahi karta."
+        });
+        Err((StatusCode::FORBIDDEN, Json(error_message)))
+    }
 }
